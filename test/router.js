@@ -1,6 +1,6 @@
 var test = require('tap').test,
 
-    router = require('../lib/router');
+    router = require('../').router;
 
 test('should execute mapped function and return', function(t) {
   var route = router({

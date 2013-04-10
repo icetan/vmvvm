@@ -1,6 +1,6 @@
 var test = require('tap').test,
 
-    Log = require('../lib/log');
+    Log = require('../').Log;
 
 test('should create an instance with logging methods mapping to levels', function(t) {
   var log = new Log(['large','medium','small']);

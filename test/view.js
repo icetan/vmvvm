@@ -1,7 +1,7 @@
 var test = require('tap').test,
     jsdom = require('jsdom'),
 
-    view = require('../lib/view');
+    view = require('../').view;
 
 test('should create an empty div if no paramaters given', function(t) {
   jsdom.env('<html><body></body></html>', [], function(err, window) {

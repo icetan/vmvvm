@@ -1,5 +1,5 @@
 module.exports = {
+  Log: require('./lib/log'),
   router: require('./lib/router'),
-  view: require('./lib/view'),
-  log: require('./lib/log')
+  view: require('./lib/view')
 };
