@@ -844,6 +844,9 @@ exports.hex_md5 = hex_md5;
 exports.b64_md5 = b64_md5;
 exports.any_md5 = any_md5;
 
+},{}],14:[function(require,module,exports){
+// nothing to see here... no file methods for the browser
+
 },{}],12:[function(require,module,exports){
 var events = require('events');
 
@@ -1197,7 +1200,7 @@ exports.format = function(f) {
   return str;
 };
 
-},{"events":13}],14:[function(require,module,exports){
+},{"events":13}],15:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -1437,7 +1440,7 @@ EventEmitter.prototype.listeners = function(type) {
 };
 
 })(require("__browserify_process"))
-},{"__browserify_process":14}],6:[function(require,module,exports){
+},{"__browserify_process":15}],6:[function(require,module,exports){
 var view = require('../../lib/view'),
     main = require('./main'),
 
@@ -1455,7 +1458,7 @@ module.exports = function(id, callback) {
   }, function(err, view) { callback(view.el); });
 };
 
-},{"../../lib/view":4,"./main":1}],7:[function(require,module,exports){
+},{"./main":1,"../../lib/view":4}],7:[function(require,module,exports){
 var view = require('../../lib/view'),
     main = require('./main'),
 
@@ -1497,28 +1500,58 @@ module.exports = function(callback) {
 };
 
 },{"../../lib/view":4,"./main":1}],4:[function(require,module,exports){
-var vixen = require('vixen');
+var fs = require('fs'),
+    vixen = require('vixen');
 
-module.exports = view;
-module.exports.defaultModel = {};
+//function xhr(url, callback) {
+//  var r = new XMLHttpRequest(),
+//      done = false;
+//  r.open('GET', url, true);
+//  r.onreadystatechange = function () {
+//    var status;
+//    if (done || r.readyState != 4) return;
+//    done = true;
+//    status = r.status != 200 && r.status != 0 ? r.status : null;
+//    callback(r.status, r.responseText);
+//  };
+//  r.onerror = function() {
+//    callback(r.status);
+//  }
+//  r.send();
+//}
 
 function xhr(url, callback) {
-  var r = new XMLHttpRequest(), done = false;
-  r.open('GET', url, true);
-  r.onreadystatechange = function () {
-    if (done || r.readyState != 4) return;
-    done = true;
-    if (r.status != 200 && r.status != 0)
-      callback(r);
-    else
-      callback(null, r.responseText);
+  var r = new XMLHttpRequest();
+  if ('withCredentials' in r)
+    r.open('GET', url, true);
+  else if (typeof XDomainRequest != 'undefined') {
+    r = new XDomainRequest();
+    r.open(method, url);
+  } else return;
+  r.onload = function() {
+    callback(r.status == 200 || r.status == 0 ? null : r.status,
+             r.responseText);
   };
+  r.onerror = function() { callback(r.status); };
   r.send();
-}
+};
+
+module.exports = view;
+
+view.defaultModel = {};
+if (typeof window !== 'undefined') view.window = window;
+view.readPath = fs.readFile ?
+  function(path, done) {
+    fs.readFile(path, {encoding:'utf8'}, done);
+  } : xhr;
+
 
 function view(opt, callback) {
-  function done(html) {
-    opt.el.innerHTML = html;
+  opt = opt || {};
+
+  function done(err, html) {
+    if (err) return callback(err);
+    if (html != null) opt.el.innerHTML = html;
     callback(null, {
       el: opt.el,
       model: vixen(opt.el, opt.model),
@@ -1537,23 +1570,19 @@ function view(opt, callback) {
     return a;
   })(view.defaultModel, opt.model || {});
 
-  if (typeof window !== 'undefined' && (!opt.el || typeof opt.el === 'string'))
-    opt.el = window.document.createElement(opt.el || 'div');
+  if (view.window && (!opt.el || typeof opt.el === 'string'))
+    opt.el = view.window.document.createElement(opt.el || 'div');
 
   if (opt.id != null) opt.el.id = opt.id;
   if (opt.className != null) opt.el.className = opt.className;
 
-  if (opt.html)
-    done(opt.html);
-  else if (opt.path)
-    //require('fs').readFile(require.resolve(opt.path), 'utf8', function(html) {
-    xhr(opt.path, function(err, html) {
-      if (err) return callback(err);
-      done(html);
-    });
+  if (opt.path)
+    view.readPath(opt.path, done);
+  else
+    done(null, opt.html);
 }
 
-},{"vixen":15}],15:[function(require,module,exports){
+},{"fs":14,"vixen":16}],16:[function(require,module,exports){
 !function(obj) {
   if (typeof module !== 'undefined')
     module.exports = obj;
