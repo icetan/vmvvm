@@ -1,0 +1,42 @@
+{
+  "name": "mvvm",
+  "version": "0.0.1",
+  "description": "Minimal MVVM.",
+  "author": "Christopher Fredén <c.freden@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/icetan/vixen.git"
+  },
+  "licenses": [{
+    "type": "MIT",
+    "url": "https://raw.github.com/icetan/vixen/master/LICENSE"
+  }],
+  "engine": {
+    "node": ">=0.6.0"
+  },
+  "dependencies": {
+    "vixen": "~0.3.1"
+  },
+  "devDependencies": {
+    "tap": "~0.4.1",
+    "tape": "~0.3.3",
+    "jsdom": "~0.5.0"
+  },
+  "scripts": {
+    "test": "node_modules/.bin/tap test/"
+  },
+  "files": ["lib/", "README.md", "LICENSE"],
+
+  "testling": {
+    "files": "test/browser.js",
+    "browsers": {
+      "ie": [ 8, 9, 10 ],
+      "firefox": [ 18, 19, "nightly" ],
+      "chrome": [ 23, 24, 25, "canary" ],
+      "safari": [ 5.1, 6 ],
+      "iphone": [ 6 ],
+      "ipad": [ 6 ],
+      "opera": [ 12, "next" ]
+    }
+  }
+}
