@@ -738,9 +738,9 @@ module.exports = main = {
 
     function hashchange(e) {
       var hash = window.location.hash.substr(1);
-      main.route(hash)(function(el) {
+      main.route(hash)(function(err, view) {
         body.innerHTML = '';
-        body.appendChild(el);
+        body.appendChild(view.el);
       });
     }
 
@@ -755,16 +755,18 @@ module.exports = main = {
 
   // Setup routes.
   route: router({
-    'item/(.*)': function (id) {
-      return require('./item').bind(undefined, id);
+    'user/(.*)': function (email) {
+      return require('./user').bind(undefined, email);
     },
-    'item': function () {
-      return require('./items');
+
+    // Default view, matches all paths
+    'login': function () {
+      return require('./login');
     },
 
     // Default view, matches all paths
     '.*': function () {
-      return require('./login');
+      return view.bind(null, {html:'404'});
     }
   }),
 
@@ -774,76 +776,68 @@ module.exports = main = {
 
 main.init(window);
 
-},{"crypto":1,"./item":6,"./items":7,"./login":8,"../../":9}],6:[function(require,module,exports){
+},{"crypto":1,"./user":6,"./login":7,"../../":8}],6:[function(require,module,exports){
 var view = require('../../lib/view'),
     main = require('./main'),
 
-    logger = main.logger.section('item');
+    logger = main.logger.section('user');
 
-module.exports = function(id, callback) {
-  logger.debug('Your on the item#%d view son.', id);
-
-  view({
-    el: 'div',
-    path: './item.html',
-    model: {
-      id: id
-    }
-  }, function(err, view) { callback(view.el); });
-};
-
-},{"../../lib/view":10,"./main":5}],7:[function(require,module,exports){
-var view = require('../../lib/view'),
-    main = require('./main'),
-
-    logger = main.logger.section('item');
-
-module.exports = function(callback) {
-  logger.debug('Your on the items view son.');
+module.exports = function(email, callback) {
+  logger.debug('Your looking at user %s.', email);
 
   view({
     el: 'div',
-    path: './items.html',
+    path: './user.html',
     model: {
+      email: email,
       items: [
         {name:'Apa', id:123},
         {name:'Hest', id:4231}
       ]
     }
-  }, function(err, view) { callback(view.el); });
+  }, callback);
 };
 
-},{"../../lib/view":10,"./main":5}],8:[function(require,module,exports){
+},{"../../lib/view":9,"./main":5}],7:[function(require,module,exports){
 var view = require('../../lib/view'),
     main = require('./main'),
 
     logger = main.logger.section('login');
 
 module.exports = function(callback) {
-  var username, password;
+  var model = {
+        login: function(e) {
+          e.preventDefault(e);
+          if (model.password === 'test')
+            window.location.hash = '#user/'+model.email;
+          else
+            model.error = 'show';
+          return false;
+        },
+        email: 'c.freden@gmail.com',
+        password: 'test'
+      };
 
-  logger.debug('Your on the login view %j son.', {asd:213})
+  logger.debug('Your on the login view son.');
 
   view({
     el: 'div',
-    path: './template.html',
-    model: {
-      email: 'c.freden@gmail.com'
-    }
-  }, function(err, view) { callback(view.el); });
+    path: './login.html',
+    model: model
+  }, callback);
 };
 
-},{"../../lib/view":10,"./main":5}],9:[function(require,module,exports){
+},{"../../lib/view":9,"./main":5}],8:[function(require,module,exports){
 module.exports = {
   Log: require('./lib/log'),
   router: require('./lib/router'),
   view: require('./lib/view')
 };
 
-},{"./lib/log":11,"./lib/router":12,"./lib/view":10}],13:[function(require,module,exports){
+},{"./lib/log":10,"./lib/router":11,"./lib/view":9}],12:[function(require,module,exports){
 // nothing to see here... no file methods for the browser
 
-},{}],11:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 var util = require('util'),
     EventEmitter = require('events').EventEmitter;
 
@@ -892,7 +886,7 @@ Log.prototype.section = function(name) {
   return logger;
 };
 
-},{"util":14,"events":15}],12:[function(require,module,exports){
+},{"util":13,"events":14}],11:[function(require,module,exports){
 module.exports = function(routes) {
   var regexps = {}, i;
 
@@ -914,7 +908,7 @@ module.exports = function(routes) {
   };
 };
 
-},{}],14:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 var events = require('events');
 
 exports.isArray = isArray;
@@ -1267,7 +1261,7 @@ exports.format = function(f) {
   return str;
 };
 
-},{"events":15}],16:[function(require,module,exports){
+},{"events":14}],15:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -1321,7 +1315,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],15:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 (function(process){if (!process.EventEmitter) process.EventEmitter = function () {};
 
 var EventEmitter = exports.EventEmitter = process.EventEmitter;
@@ -1507,7 +1501,7 @@ EventEmitter.prototype.listeners = function(type) {
 };
 
 })(require("__browserify_process"))
-},{"__browserify_process":16}],10:[function(require,module,exports){
+},{"__browserify_process":15}],9:[function(require,module,exports){
 var fs = require('fs'),
     vixen = require('vixen');
 
@@ -1571,12 +1565,10 @@ function view(opt, callback) {
   }
 
   // Override default view model with given model.
-  opt.model = (function(b, c) {
-    var i, a = {};
-    for (i in b) a[i] = b[i];
-    for (i in c) a[i] = c[i];
+  opt.model = (function(a, b) {
+    for (var i in b) if (!(i in a)) a[i] = b[i];
     return a;
-  })(view.defaultModel, opt.model || {});
+  })(opt.model || {}, view.defaultModel);
 
   if (view.window && (!opt.el || typeof opt.el === 'string'))
     opt.el = view.window.document.createElement(opt.el || 'div');
@@ -1590,7 +1582,7 @@ function view(opt, callback) {
     done(null, opt.html);
 }
 
-},{"fs":13,"vixen":17}],17:[function(require,module,exports){
+},{"fs":12,"vixen":16}],16:[function(require,module,exports){
 !function(obj) {
   if (typeof module !== 'undefined')
     module.exports = obj;
@@ -1634,8 +1626,8 @@ function view(opt, callback) {
     }
   }
 
-  function createProxy(maps) {
-    var proxy = {};
+  function createProxy(maps, proxy) {
+    proxy = proxy || {};
     proxy.extend = function(obj) {
       var toRender = {};
       Object.keys(obj).forEach(function(prop) {
@@ -1667,7 +1659,7 @@ function view(opt, callback) {
     return proxy;
   }
 
-  return function(el, orig) {
+  return function(el, model) {
     var pattern = /\{\{.+?\}\}/g,
         pipe = '|';
 
@@ -1689,11 +1681,11 @@ function view(opt, callback) {
     }
 
     function traverse(el, orig) {
-      var orig = orig || {},
-          binds = {},
+      var binds = {},
           rebinds = {},
           renders = {},
           count = 0;
+      orig = orig || {};
 
       function bindRenders(chains, renderId) {
         // Create property to render mapping
@@ -1783,7 +1775,7 @@ function view(opt, callback) {
 
       // Remove no-traverse attribute if root node
       el.removeAttribute('data-subview');
-
+require('fs');
       traverseElements(el, function(el_) {
         var i, iter, template, nodes, renderId;
 
@@ -1838,9 +1830,9 @@ function view(opt, callback) {
       });
       return {orig:orig, binds:binds, rebinds:rebinds, renders:renders};
     }
-    return createProxy(traverse(el, orig));
+    return createProxy(traverse(el, model && extend({}, model)), model);
   };
 }());
 
-},{}]},{},[5])
+},{"fs":12}]},{},[5])
 ;

@@ -25,9 +25,9 @@ module.exports = main = {
 
     function hashchange(e) {
       var hash = window.location.hash.substr(1);
-      main.route(hash)(function(el) {
+      main.route(hash)(function(err, view) {
         body.innerHTML = '';
-        body.appendChild(el);
+        body.appendChild(view.el);
       });
     }
 
@@ -42,16 +42,18 @@ module.exports = main = {
 
   // Setup routes.
   route: router({
-    'item/(.*)': function (id) {
-      return require('./item').bind(undefined, id);
+    'user/(.*)': function (email) {
+      return require('./user').bind(undefined, email);
     },
-    'item': function () {
-      return require('./items');
+
+    // Default view, matches all paths
+    'login': function () {
+      return require('./login');
     },
 
     // Default view, matches all paths
     '.*': function () {
-      return require('./login');
+      return view.bind(null, {html:'404'});
     }
   }),
 

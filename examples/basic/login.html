@@ -1,0 +1,23 @@
+<style>
+  .error {
+    color: red;
+    display: none;
+  }
+  .show {
+    display: block;
+  }
+</style>
+
+<h1>Login</h1>
+
+<div class="error {{error}}">Invalid password</div>
+
+<form onsubmit="{{login}}">
+  <label for="email">E-mail</label><br>
+  <input name="email" type="text" value="{{email}}"><br>
+  <label for="password">Password</label><br>
+  <input name="password" type="password" value="{{password}}"><br>
+  <button>Login</button>
+</form>
+
+<a href="http://icetan.github.io/vixen/">More on Vixen templates</a>

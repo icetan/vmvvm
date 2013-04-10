@@ -4,15 +4,24 @@ var view = require('../../lib/view'),
     logger = main.logger.section('login');
 
 module.exports = function(callback) {
-  var username, password;
+  var model = {
+        login: function(e) {
+          e.preventDefault(e);
+          if (model.password === 'test')
+            window.location.hash = '#user/'+model.email;
+          else
+            model.error = 'show';
+          return false;
+        },
+        email: 'c.freden@gmail.com',
+        password: 'test'
+      };
 
-  logger.debug('Your on the login view %j son.', {asd:213})
+  logger.debug('Your on the login view son.');
 
   view({
     el: 'div',
-    path: './template.html',
-    model: {
-      email: 'c.freden@gmail.com'
-    }
-  }, function(err, view) { callback(view.el); });
+    path: './login.html',
+    model: model
+  }, callback);
 };
