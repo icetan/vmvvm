@@ -1,9 +1,10 @@
 var crypto = require('crypto'),
 
     // Vixen MVVM modules
-    router = require('../../lib/router'),
-    view = require('../../lib/view'),
-    Log = require('../../lib/log'),
+    vmvvm = require('../../'),
+    router = vmvvm.router,
+    view = vmvvm.view,
+    Log = vmvvm.Log,
 
     main;
 

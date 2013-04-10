@@ -1,67 +1,4 @@
 ;(function(e,t,n){function i(n,s){if(!t[n]){if(!e[n]){var o=typeof require=="function"&&require;if(!s&&o)return o(n,!0);if(r)return r(n,!0);throw new Error("Cannot find module '"+n+"'")}var u=t[n]={exports:{}};e[n][0].call(u.exports,function(t){var r=e[n][1][t];return i(r?r:t)},u,u.exports)}return t[n].exports}var r=typeof require=="function"&&require;for(var s=0;s<n.length;s++)i(n[s]);return i})({1:[function(require,module,exports){
-var crypto = require('crypto'),
-
-    // Vixen MVVM modules
-    router = require('../../lib/router'),
-    view = require('../../lib/view'),
-    Log = require('../../lib/log'),
-
-    main;
-
-// Setup default chaining functions for views.
-view.defaultModel = {
-  gravatar: function(email) {
-    var md5sum = crypto.createHash('md5');
-    md5sum.update(email.trim().toLowerCase());
-    return 'http://www.gravatar.com/avatar/'+md5sum.digest('hex')+
-      '?d=identicon&s=200';
-  }
-};
-
-module.exports = main = {
-  // Init for main.
-  init: function(window) {
-    var body = window.document.getElementsByTagName('body')[0];
-
-    function hashchange(e) {
-      var hash = window.location.hash.substr(1);
-      main.route(hash)(function(el) {
-        body.innerHTML = '';
-        body.appendChild(el);
-      });
-    }
-
-    window.logs = [];
-    main.logger.on('log', function(log) {
-      window.logs.push(log);
-    });
-
-    window.addEventListener('hashchange', hashchange);
-    hashchange();
-  },
-
-  // Setup routes.
-  route: router({
-    'item/(.*)': function (id) {
-      return require('./item').bind(undefined, id);
-    },
-    'item': function () {
-      return require('./items');
-    },
-
-    // Default view, matches all paths
-    '.*': function () {
-      return require('./login');
-    }
-  }),
-
-  // Setup a logger to log to memory.
-  logger: new Log()
-};
-
-main.init(window);
-
-},{"crypto":2,"../../lib/router":3,"../../lib/view":4,"../../lib/log":5,"./item":6,"./items":7,"./login":8}],2:[function(require,module,exports){
 var sha = require('./sha')
 var rng = require('./rng')
 var md5 = require('./md5')
@@ -137,78 +74,7 @@ exports.randomBytes = function(size, callback) {
   }
 })
 
-},{"./sha":9,"./rng":10,"./md5":11}],3:[function(require,module,exports){
-module.exports = function(routes) {
-  var regexps = {}, i;
-
-  for (i in routes) {
-    regexps[i] = new RegExp('^'+i+'$');
-  }
-
-  return function(path) {
-    var i, m;
-    if (path in routes) {
-      return routes[path]();
-    }
-    for (i in regexps) {
-      m = path.match(regexps[i]);
-      if (m != null) {
-        return routes[i].apply(undefined, m.slice(1));
-      }
-    }
-  };
-};
-
-},{}],5:[function(require,module,exports){
-var util = require('util'),
-    EventEmitter = require('events').EventEmitter;
-
-module.exports = Log;
-
-util.inherits(Log, EventEmitter);
-
-function Log(levels) {
-  var this_ = this,
-      levels = levels || ['fatal', 'error', 'warning', 'info', 'debug'];
-  this._levels = {};
-  this.level = levels.length - 1;
-  levels.forEach(function(type, i) {
-    this_._levels[type] = i;
-    this_[type] = Log.prototype.log.bind(this_, type);
-  });
-}
-
-Log.prototype.getLevel = function(type) {
-  return this._levels[type];
-};
-
-Log.prototype.filter = function(log) {
-  return log.level <= this.level;
-};
-
-Log.prototype.log = function(type) {
-  var data = {
-    date: new Date(),
-    section: this.section,
-    type: type,
-    level: this.getLevel(type)
-  };
-  if (!this.filter(data)) return;
-  data.msg = util.format.apply(util, Array.prototype.slice.call(arguments, 1));
-  this.emit('log', data);
-};
-
-Log.prototype.section = function(name) {
-  var this_ = this,
-      logger = new Log(Object.keys(this._levels));
-  logger.section = name;
-  logger.on('log', function(log) {
-    if (this_.filter(log)) this_.emit('log', log);
-  });
-  return logger;
-};
-
-},{"util":12,"events":13}],9:[function(require,module,exports){
+},{"./sha":2,"./rng":3,"./md5":4}],2:[function(require,module,exports){
 /*
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-1, as defined
  * in FIPS PUB 180-1
@@ -420,7 +286,7 @@ function binb2b64(binarray)
 }
 
 
-},{}],10:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 // Original code adapted from Robert Kieffer.
 // details at https://github.com/broofa/node-uuid
 (function() {
@@ -458,7 +324,7 @@ function binb2b64(binarray)
   module.exports = whatwgRNG || mathRNG;
 
 }())
-},{}],11:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 /*
  * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
  * Digest Algorithm, as defined in RFC 1321.
@@ -844,10 +710,211 @@ exports.hex_md5 = hex_md5;
 exports.b64_md5 = b64_md5;
 exports.any_md5 = any_md5;
 
-},{}],14:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
+var crypto = require('crypto'),
+
+    // Vixen MVVM modules
+    vmvvm = require('../../'),
+    router = vmvvm.router,
+    view = vmvvm.view,
+    Log = vmvvm.Log,
+
+    main;
+
+// Setup default chaining functions for views.
+view.defaultModel = {
+  gravatar: function(email) {
+    var md5sum = crypto.createHash('md5');
+    md5sum.update(email.trim().toLowerCase());
+    return 'http://www.gravatar.com/avatar/'+md5sum.digest('hex')+
+      '?d=identicon&s=200';
+  }
+};
+
+module.exports = main = {
+  // Init for main.
+  init: function(window) {
+    var body = window.document.getElementsByTagName('body')[0];
+
+    function hashchange(e) {
+      var hash = window.location.hash.substr(1);
+      main.route(hash)(function(el) {
+        body.innerHTML = '';
+        body.appendChild(el);
+      });
+    }
+
+    window.logs = [];
+    main.logger.on('log', function(log) {
+      window.logs.push(log);
+    });
+
+    window.addEventListener('hashchange', hashchange);
+    hashchange();
+  },
+
+  // Setup routes.
+  route: router({
+    'item/(.*)': function (id) {
+      return require('./item').bind(undefined, id);
+    },
+    'item': function () {
+      return require('./items');
+    },
+
+    // Default view, matches all paths
+    '.*': function () {
+      return require('./login');
+    }
+  }),
+
+  // Setup a logger to log to memory.
+  logger: new Log()
+};
+
+main.init(window);
+
+},{"crypto":1,"./item":6,"./items":7,"./login":8,"../../":9}],6:[function(require,module,exports){
+var view = require('../../lib/view'),
+    main = require('./main'),
+
+    logger = main.logger.section('item');
+
+module.exports = function(id, callback) {
+  logger.debug('Your on the item#%d view son.', id);
+
+  view({
+    el: 'div',
+    path: './item.html',
+    model: {
+      id: id
+    }
+  }, function(err, view) { callback(view.el); });
+};
+
+},{"../../lib/view":10,"./main":5}],7:[function(require,module,exports){
+var view = require('../../lib/view'),
+    main = require('./main'),
+
+    logger = main.logger.section('item');
+
+module.exports = function(callback) {
+  logger.debug('Your on the items view son.');
+
+  view({
+    el: 'div',
+    path: './items.html',
+    model: {
+      items: [
+        {name:'Apa', id:123},
+        {name:'Hest', id:4231}
+      ]
+    }
+  }, function(err, view) { callback(view.el); });
+};
+
+},{"../../lib/view":10,"./main":5}],8:[function(require,module,exports){
+var view = require('../../lib/view'),
+    main = require('./main'),
+
+    logger = main.logger.section('login');
+
+module.exports = function(callback) {
+  var username, password;
+
+  logger.debug('Your on the login view %j son.', {asd:213})
+
+  view({
+    el: 'div',
+    path: './template.html',
+    model: {
+      email: 'c.freden@gmail.com'
+    }
+  }, function(err, view) { callback(view.el); });
+};
+
+},{"../../lib/view":10,"./main":5}],9:[function(require,module,exports){
+module.exports = {
+  Log: require('./lib/log'),
+  router: require('./lib/router'),
+  view: require('./lib/view')
+};
+
+},{"./lib/log":11,"./lib/router":12,"./lib/view":10}],13:[function(require,module,exports){
 // nothing to see here... no file methods for the browser
 
-},{}],12:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
+var util = require('util'),
+    EventEmitter = require('events').EventEmitter;
+
+module.exports = Log;
+
+util.inherits(Log, EventEmitter);
+
+function Log(levels) {
+  var this_ = this,
+      levels = levels || ['fatal', 'error', 'warning', 'info', 'debug'];
+  this._levels = {};
+  this.level = levels.length - 1;
+  levels.forEach(function(type, i) {
+    this_._levels[type] = i;
+    this_[type] = Log.prototype.log.bind(this_, type);
+  });
+}
+
+Log.prototype.getLevel = function(type) {
+  return this._levels[type];
+};
+
+Log.prototype.filter = function(log) {
+  return log.level <= this.level;
+};
+
+Log.prototype.log = function(type) {
+  var data = {
+    date: new Date(),
+    section: this.section,
+    type: type,
+    level: this.getLevel(type)
+  };
+  if (!this.filter(data)) return;
+  data.msg = util.format.apply(util, Array.prototype.slice.call(arguments, 1));
+  this.emit('log', data);
+};
+
+Log.prototype.section = function(name) {
+  var this_ = this,
+      logger = new Log(Object.keys(this._levels));
+  logger.section = name;
+  logger.on('log', function(log) {
+    if (this_.filter(log)) this_.emit('log', log);
+  });
+  return logger;
+};
+
+},{"util":14,"events":15}],12:[function(require,module,exports){
+module.exports = function(routes) {
+  var regexps = {}, i;
+
+  for (i in routes) {
+    regexps[i] = new RegExp('^'+i+'$');
+  }
+
+  return function(path) {
+    var i, m;
+    if (path in routes) {
+      return routes[path]();
+    }
+    for (i in regexps) {
+      m = path.match(regexps[i]);
+      if (m != null) {
+        return routes[i].apply(undefined, m.slice(1));
+      }
+    }
+  };
+};
+
+},{}],14:[function(require,module,exports){
 var events = require('events');
 
 exports.isArray = isArray;
@@ -1200,7 +1267,7 @@ exports.format = function(f) {
   return str;
 };
 
-},{"events":13}],15:[function(require,module,exports){
+},{"events":15}],16:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -1254,7 +1321,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 (function(process){if (!process.EventEmitter) process.EventEmitter = function () {};
 
 var EventEmitter = exports.EventEmitter = process.EventEmitter;
@@ -1440,66 +1507,7 @@ EventEmitter.prototype.listeners = function(type) {
 };
 
 })(require("__browserify_process"))
-},{"__browserify_process":15}],6:[function(require,module,exports){
-var view = require('../../lib/view'),
-    main = require('./main'),
-
-    logger = main.logger.section('item');
-
-module.exports = function(id, callback) {
-  logger.debug('Your on the item#%d view son.', id);
-
-  view({
-    el: 'div',
-    path: './item.html',
-    model: {
-      id: id
-    }
-  }, function(err, view) { callback(view.el); });
-};
-
-},{"./main":1,"../../lib/view":4}],7:[function(require,module,exports){
-var view = require('../../lib/view'),
-    main = require('./main'),
-
-    logger = main.logger.section('item');
-
-module.exports = function(callback) {
-  logger.debug('Your on the items view son.');
-
-  view({
-    el: 'div',
-    path: './items.html',
-    model: {
-      items: [
-        {name:'Apa', id:123},
-        {name:'Hest', id:4231}
-      ]
-    }
-  }, function(err, view) { callback(view.el); });
-};
-
-},{"../../lib/view":4,"./main":1}],8:[function(require,module,exports){
-var view = require('../../lib/view'),
-    main = require('./main'),
-
-    logger = main.logger.section('login');
-
-module.exports = function(callback) {
-  var username, password;
-
-  logger.debug('Your on the login view %j son.', {asd:213})
-
-  view({
-    el: 'div',
-    path: './template.html',
-    model: {
-      email: 'c.freden@gmail.com'
-    }
-  }, function(err, view) { callback(view.el); });
-};
-
-},{"../../lib/view":4,"./main":1}],4:[function(require,module,exports){
+},{"__browserify_process":16}],10:[function(require,module,exports){
 var fs = require('fs'),
     vixen = require('vixen');
 
@@ -1582,7 +1590,7 @@ function view(opt, callback) {
     done(null, opt.html);
 }
 
-},{"fs":14,"vixen":16}],16:[function(require,module,exports){
+},{"fs":13,"vixen":17}],17:[function(require,module,exports){
 !function(obj) {
   if (typeof module !== 'undefined')
     module.exports = obj;
@@ -1834,5 +1842,5 @@ function view(opt, callback) {
   };
 }());
 
-},{}]},{},[1])
+},{}]},{},[5])
 ;
