@@ -30,8 +30,9 @@ module.exports = main = {
       });
     }
 
+    window.logs = [];
     main.logger.on('log', function(log) {
-      main.logs.push(log);
+      window.logs.push(log);
     });
 
     window.addEventListener('hashchange', hashchange);
@@ -40,12 +41,12 @@ module.exports = main = {
 
   // Setup routes.
   route: router({
-    //'item/(.*)': function (id) {
-    //  return require('./item').bind(undefined, id);
-    //},
-    //'item': function () {
-    //  return require('./items');
-    //},
+    'item/(.*)': function (id) {
+      return require('./item').bind(undefined, id);
+    },
+    'item': function () {
+      return require('./items');
+    },
 
     // Default view, matches all paths
     '.*': function () {
@@ -54,7 +55,6 @@ module.exports = main = {
   }),
 
   // Setup a logger to log to memory.
-  logs: [],
   logger: new Log()
 };
 

@@ -31,8 +31,9 @@ module.exports = main = {
       });
     }
 
+    window.logs = [];
     main.logger.on('log', function(log) {
-      main.logs.push(log);
+      window.logs.push(log);
     });
 
     window.addEventListener('hashchange', hashchange);
@@ -41,12 +42,12 @@ module.exports = main = {
 
   // Setup routes.
   route: router({
-    //'item/(.*)': function (id) {
-    //  return require('./item').bind(undefined, id);
-    //},
-    //'item': function () {
-    //  return require('./items');
-    //},
+    'item/(.*)': function (id) {
+      return require('./item').bind(undefined, id);
+    },
+    'item': function () {
+      return require('./items');
+    },
 
     // Default view, matches all paths
     '.*': function () {
@@ -55,13 +56,12 @@ module.exports = main = {
   }),
 
   // Setup a logger to log to memory.
-  logs: [],
   logger: new Log()
 };
 
 main.init(window);
 
-},{"crypto":2,"../../lib/router":3,"../../lib/view":4,"../../lib/log":5,"./login":6}],2:[function(require,module,exports){
+},{"crypto":2,"../../lib/router":3,"../../lib/view":4,"../../lib/log":5,"./item":6,"./items":7,"./login":8}],2:[function(require,module,exports){
 var sha = require('./sha')
 var rng = require('./rng')
 var md5 = require('./md5')
@@ -137,7 +137,7 @@ exports.randomBytes = function(size, callback) {
   }
 })
 
-},{"./sha":7,"./rng":8,"./md5":9}],3:[function(require,module,exports){
+},{"./sha":9,"./rng":10,"./md5":11}],3:[function(require,module,exports){
 module.exports = function(routes) {
   var regexps = {}, i;
 
@@ -208,45 +208,7 @@ Log.prototype.section = function(name) {
   return logger;
 };
 
-},{"util":10,"events":11}],8:[function(require,module,exports){
-// Original code adapted from Robert Kieffer.
-// details at https://github.com/broofa/node-uuid
-(function() {
-  var _global = this;
-
-  var mathRNG, whatwgRNG;
-
-  // NOTE: Math.random() does not guarantee "cryptographic quality"
-  mathRNG = function(size) {
-    var bytes = new Array(size);
-    var r;
-
-    for (var i = 0, r; i < size; i++) {
-      if ((i & 0x03) == 0) r = Math.random() * 0x100000000;
-      bytes[i] = r >>> ((i & 0x03) << 3) & 0xff;
-    }
-
-    return bytes;
-  }
-
-  // currently only available in webkit-based browsers.
-  if (_global.crypto && crypto.getRandomValues) {
-    var _rnds = new Uint32Array(4);
-    whatwgRNG = function(size) {
-      var bytes = new Array(size);
-      crypto.getRandomValues(_rnds);
-
-      for (var c = 0 ; c < size; c++) {
-        bytes[c] = _rnds[c >> 2] >>> ((c & 0x03) * 8) & 0xff;
-      }
-      return bytes;
-    }
-  }
-
-  module.exports = whatwgRNG || mathRNG;
-
-}())
-},{}],7:[function(require,module,exports){
+},{"util":12,"events":13}],9:[function(require,module,exports){
 /*
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-1, as defined
  * in FIPS PUB 180-1
@@ -458,7 +420,45 @@ function binb2b64(binarray)
 }
 
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
+// Original code adapted from Robert Kieffer.
+// details at https://github.com/broofa/node-uuid
+(function() {
+  var _global = this;
+
+  var mathRNG, whatwgRNG;
+
+  // NOTE: Math.random() does not guarantee "cryptographic quality"
+  mathRNG = function(size) {
+    var bytes = new Array(size);
+    var r;
+
+    for (var i = 0, r; i < size; i++) {
+      if ((i & 0x03) == 0) r = Math.random() * 0x100000000;
+      bytes[i] = r >>> ((i & 0x03) << 3) & 0xff;
+    }
+
+    return bytes;
+  }
+
+  // currently only available in webkit-based browsers.
+  if (_global.crypto && crypto.getRandomValues) {
+    var _rnds = new Uint32Array(4);
+    whatwgRNG = function(size) {
+      var bytes = new Array(size);
+      crypto.getRandomValues(_rnds);
+
+      for (var c = 0 ; c < size; c++) {
+        bytes[c] = _rnds[c >> 2] >>> ((c & 0x03) * 8) & 0xff;
+      }
+      return bytes;
+    }
+  }
+
+  module.exports = whatwgRNG || mathRNG;
+
+}())
+},{}],11:[function(require,module,exports){
 /*
  * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
  * Digest Algorithm, as defined in RFC 1321.
@@ -844,7 +844,7 @@ exports.hex_md5 = hex_md5;
 exports.b64_md5 = b64_md5;
 exports.any_md5 = any_md5;
 
-},{}],10:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 var events = require('events');
 
 exports.isArray = isArray;
@@ -1197,7 +1197,7 @@ exports.format = function(f) {
   return str;
 };
 
-},{"events":11}],12:[function(require,module,exports){
+},{"events":13}],14:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -1251,7 +1251,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],11:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 (function(process){if (!process.EventEmitter) process.EventEmitter = function () {};
 
 var EventEmitter = exports.EventEmitter = process.EventEmitter;
@@ -1437,7 +1437,46 @@ EventEmitter.prototype.listeners = function(type) {
 };
 
 })(require("__browserify_process"))
-},{"__browserify_process":12}],6:[function(require,module,exports){
+},{"__browserify_process":14}],6:[function(require,module,exports){
+var view = require('../../lib/view'),
+    main = require('./main'),
+
+    logger = main.logger.section('item');
+
+module.exports = function(id, callback) {
+  logger.debug('Your on the item#%d view son.', id);
+
+  view({
+    el: 'div',
+    path: './item.html',
+    model: {
+      id: id
+    }
+  }, function(err, view) { callback(view.el); });
+};
+
+},{"../../lib/view":4,"./main":1}],7:[function(require,module,exports){
+var view = require('../../lib/view'),
+    main = require('./main'),
+
+    logger = main.logger.section('item');
+
+module.exports = function(callback) {
+  logger.debug('Your on the items view son.');
+
+  view({
+    el: 'div',
+    path: './items.html',
+    model: {
+      items: [
+        {name:'Apa', id:123},
+        {name:'Hest', id:4231}
+      ]
+    }
+  }, function(err, view) { callback(view.el); });
+};
+
+},{"../../lib/view":4,"./main":1}],8:[function(require,module,exports){
 var view = require('../../lib/view'),
     main = require('./main'),
 
@@ -1465,7 +1504,7 @@ module.exports.defaultModel = {};
 
 function xhr(url, callback) {
   var r = new XMLHttpRequest(), done = false;
-  r.open("GET", url, true);
+  r.open('GET', url, true);
   r.onreadystatechange = function () {
     if (done || r.readyState != 4) return;
     done = true;
@@ -1514,7 +1553,7 @@ function view(opt, callback) {
     });
 }
 
-},{"vixen":13}],13:[function(require,module,exports){
+},{"vixen":15}],15:[function(require,module,exports){
 !function(obj) {
   if (typeof module !== 'undefined')
     module.exports = obj;
