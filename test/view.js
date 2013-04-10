@@ -94,3 +94,14 @@ test('should add default view model properties to each new view', function(t) {
   });
   t.plan(2);
 });
+
+test('same model object returned as given', function(t) {
+  jsdom.env('<html><body></body></html>', [], function(err, window) {
+    var model = { a:1, b:2 };
+    view.window = window;
+    view({ model: model }, function(err, v) {
+      t.ok(v.model === model);
+    });
+  });
+  t.plan(1);
+});
