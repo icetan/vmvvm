@@ -1,3 +1,5 @@
+[![NodeJS build status](https://secure.travis-ci.org/icetan/vmvvm.png)](http://travis-ci.org/icetan/vmvvm)
+
 Vixen MVVM
 ==========
 
