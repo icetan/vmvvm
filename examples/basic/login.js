@@ -20,7 +20,6 @@ module.exports = function(callback) {
   logger.debug('Your on the login view son.');
 
   view({
-    el: 'div',
     path: './login.html',
     model: model
   }, callback);
