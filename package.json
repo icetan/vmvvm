@@ -17,11 +17,11 @@
     "node": ">=0.8.0"
   },
   "dependencies": {
-    "vixen": "~0.6.0"
+    "vixen": "*"
   },
   "devDependencies": {
-    "tap": "~0.4.1",
-    "jsdom": "~0.5.0"
+    "tap": "*",
+    "jsdom": "*"
   },
   "scripts": {
     "test": "node_modules/.bin/tap test/"
